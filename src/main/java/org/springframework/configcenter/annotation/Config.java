@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * @date 2015年12月31日 下午11:23:27
 
  */
-@Target({ ElementType.FIELD })
+@Target({ ElementType.FIELD,ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Config {

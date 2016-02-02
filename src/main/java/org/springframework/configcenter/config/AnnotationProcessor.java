@@ -4,13 +4,11 @@
 package org.springframework.configcenter.config;
 
 import java.lang.reflect.Field;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.lang.reflect.Method;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.configcenter.ConfigLoader;
 import org.springframework.configcenter.annotation.Config;
@@ -31,6 +29,7 @@ public class AnnotationProcessor implements BeanPostProcessor{
 			throws BeansException {
 		logger.info("ConfigCenter annotation processor postProcessBeforeInitialization." );
 		parseField(bean);
+		parseMethod(bean);
 		return bean;
 	}
 
@@ -45,5 +44,16 @@ public class AnnotationProcessor implements BeanPostProcessor{
 			}
 		}
 	}
+	private void parseMethod(Object obj) {
+        Method[] methods = obj.getClass().getDeclaredMethods();
+        for (Method m : methods) {
+            Config an = m.getAnnotation(Config.class);
+            logger.debug("parsing method[{}].",m);
+            if (an != null) {
+                logger.info("process method[{}].",m);
+                ConfigLoader.addConfigItemListener(an.name(), obj, m).set();
+            }
+        }
+    }
 	
 }

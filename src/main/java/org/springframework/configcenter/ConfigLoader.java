@@ -5,6 +5,7 @@ package org.springframework.configcenter;
 
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,6 @@ import org.springframework.configcenter.annotation.Config;
 
 import com.netflix.curator.framework.CuratorFramework;
 import com.netflix.curator.framework.CuratorFrameworkFactory;
-import com.netflix.curator.framework.api.CuratorWatcher;
 import com.netflix.curator.framework.recipes.cache.NodeCache;
 import com.netflix.curator.framework.recipes.cache.NodeCacheListener;
 import com.netflix.curator.retry.RetryNTimes;
@@ -214,7 +212,7 @@ public class ConfigLoader {
 
 	}
 
-	public static PropertyListener addConfigItemListener(String name,
+    public static PropertyListener addConfigItemListener(String name,
 			Object targetObject, Field f) {
 		Config annotation = f.getAnnotation(Config.class);
 
@@ -224,7 +222,16 @@ public class ConfigLoader {
 		}
 		return instance.configItemMap.get(name).addListener(f, targetObject);
 	}
-	
+    public static PropertyListener addConfigItemListener(String name,
+            Object targetObject, Method m) {
+        Config annotation = m.getAnnotation(Config.class);
+
+        if (!instance.configItemMap.containsKey(name) && !annotation.ignore()) {
+            throw new RuntimeException(String.format(
+                    "property[%s] not configed", name));
+        }
+        return instance.configItemMap.get(name).addListener(m, targetObject);
+    }
 	public static void close() {
 		if(instance != null) {
 			try {
